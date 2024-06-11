@@ -1,0 +1,11 @@
+python src/train.py  \
+    --do_train \
+    --train_path datahub/utkface_aligned_cropped_emotion/train \
+    --emotion_labels_train_path datahub/utkface_aligned_cropped_emotion/emotion_train.txt \
+    --do_eval \
+    --test_path datahub/utkface_aligned_cropped_emotion/test \
+    --emotion_labels_test_path datahub/utkface_aligned_cropped_emotion/emotion_test.txt \
+    --batch_size 128 \
+    --num_proc 2 \
+    --epochs 100 \
+    --lr 3e-4

@@ -1,0 +1,8 @@
+torch==2.2.0
+torchvision==0.17.0
+opencv-python
+tqdm
+timm
+onnx==1.12.0
+onnxruntime
+lightning
