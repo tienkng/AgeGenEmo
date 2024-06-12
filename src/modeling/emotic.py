@@ -36,23 +36,22 @@ class EmoticNet(nn.Module):
         self.fc_emotion = nn.Linear(in_features=opt_ch, out_features=emotion_classes)
         
     def forward(self, x:torch.Tensor):
-        batch_size = x.shape[0]
         x = self.featurenet(x)    
   
         # neck + head layer 
         x_age = self.block_age(x)
         x_age = self.adap_age(x_age)  # globalpool for first head
-        x_age= x_age.view(batch_size, -1)
+        x_age= x_age.view(x.shape[0], -1)
         x_age = self.fc_age(x_age)
         
         x_gender = self.block_gender(x)
         x_gender = self.adap_gender(x_gender) # globalpool for first head
-        x_gender = x_gender.view(batch_size, -1)
+        x_gender = x_gender.view(x.shape[0], -1)
         x_gender = self.fc_gender(x_gender).sigmoid()
         
         x_emotion = self.block_emotion(x)
         x_emotion = self.adap_emotion(x_emotion) # globalpool for first head
-        x_emotion = x_emotion.view(batch_size, -1)
+        x_emotion = x_emotion.view(x.shape[0], -1)
         x_emotion = self.fc_emotion(x_emotion)
         
         return x_age, x_gender, x_emotion

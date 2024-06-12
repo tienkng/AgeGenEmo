@@ -33,13 +33,12 @@ if __name__ == '__main__':
     )
     
     opt = parser.parse_args()
-    
-    print("\nSummary: ", opt, "\n")
 
     t = time.time()
     img = torch.randn(opt.batch_size, 3, opt.im_size, opt.im_size)
     model = EmoticNet()
     model = attem_load(model, opt.checkpoint_path)
+    model.eval()
     
     with torch.no_grad():
         pred_age, pred_gender, pred_emotion = model(img)
@@ -49,19 +48,19 @@ if __name__ == '__main__':
     
     # Export model
     dynamic_axes = None
-    if opt.dynamic:
-        dynamic_axes = {"input": {0: "batch"}}
-        output_axes = {
-                "age" : {0: "batch", 1: "pred_age"},
-                "gender" : {0: "batch", 2: "pred_gender"},
-                "emotion" : {0: "batch", 3: "pred_emotion"}
-            }
-        dynamic_axes.update(output_axes)
+    # if opt.dynamic:
+    #     dynamic_axes = {"images": {0: "batch", 2: "height", 3: "width"}}
+    #     output_axes = {
+    #             "age" : {0: 1, 1:1},
+    #             "gender" : {0: 1, 2:1},
+    #             "emotion" : {0: 1, 3:8}
+    #         }
+    #     dynamic_axes.update(output_axes)
         
     if opt.dynamic_batch:
         opt.batch_size = "batch"
         dynamic_axes = {
-            "input": {0: "batch"},
+            "image": {0: "batch"},
         }
         output_axes = {
                 "age" : {0: "batch"},
@@ -69,14 +68,14 @@ if __name__ == '__main__':
                 "emotion" : {0: "batch"}
             }
         dynamic_axes.update(output_axes)
-        
+
     torch.onnx.export(
         model,  # model
-        (img), # inputs
+        img, # inputs
         saved_path,
         verbose=False,
         opset_version=12, 
-        input_names = ['imgage'],
+        input_names = ['image'],
         output_names = ['age', 'gender', 'emotion'],
         dynamic_axes=dynamic_axes
     )
@@ -107,8 +106,10 @@ if __name__ == '__main__':
             print(f"Cleanup failure: {e}")
             
 
+    input = [node for node in onnx_model.graph.input]
     output =[node for node in onnx_model.graph.output]
-    print('Outputs: ', output)
+    print('\nInput: ', input)
+    print('\nOutputs: ', output)
     
     onnx.save(onnx_model, saved_path)
     print("ONNX export success, saved as %s" % saved_path)
