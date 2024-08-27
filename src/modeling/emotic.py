@@ -10,10 +10,10 @@ class EmoticNet(nn.Module):
         
         if backone == 'mobinetv2':
             mobilenet_v2 = timm.create_model('mobilenetv2_100', pretrained=True) 
-            self.featurenet = nn.Sequential(*list(mobilenet_v2.children())[:-3])
+            self.featurenet = nn.Sequential(*list(mobilenet_v2.children())[:-3]) # last Conv
             encoder_ch_in = 1280
         elif backone == 'mobinetv3':
-            mobilenet_v3 = timm.create_model('tf_mobilenetv3_large_100', pretrained=True)
+            mobilenet_v3 = timm.create_model('tf_mobilenetv3_large_100', pretrained=True) # tf_mobilenetv3_small_minimal_100
             self.featurenet = nn.Sequential(*list(mobilenet_v3.children())[:-4])
             encoder_ch_in = 960
         else:
@@ -21,7 +21,6 @@ class EmoticNet(nn.Module):
         
         opt_ch = 512
         # self.set_parameter_requires_grad(self.featurenet, False)
-        
         # body neck conv
         self.block_age = self.conv_block(ch_in=encoder_ch_in, ch_out=opt_ch)
         self.adap_age = nn.AdaptiveAvgPool2d((1,1))
@@ -36,6 +35,7 @@ class EmoticNet(nn.Module):
         self.fc_emotion = nn.Linear(in_features=opt_ch, out_features=emotion_classes)
         
     def forward(self, x:torch.Tensor):
+        # batch_size = x.shape[0]
         x = self.featurenet(x)    
   
         # neck + head layer 
@@ -53,7 +53,7 @@ class EmoticNet(nn.Module):
         x_emotion = self.adap_emotion(x_emotion) # globalpool for first head
         x_emotion = x_emotion.view(x.shape[0], -1)
         x_emotion = self.fc_emotion(x_emotion)
-        
+
         return x_age, x_gender, x_emotion
     
     def conv_block(self, ch_in, ch_out):
@@ -62,13 +62,12 @@ class EmoticNet(nn.Module):
             nn.BatchNorm2d(ch_out),
             nn.Hardswish(),
             nn.Dropout(0.3, inplace=False),
+            # nn.MaxPool2d(2), 
         )
         
     def set_parameter_requires_grad(self, model, requires_grad):
         for param in model.parameters():
             param.requires_grad = requires_grad
-            
-            
             
 if __name__ == '__main__':
     IMG_SIZE = 224

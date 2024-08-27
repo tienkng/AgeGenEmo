@@ -5,7 +5,6 @@ from torchvision import transforms
 from PIL import Image
 
 
-
 class EmoticDataset(Dataset):
     def __init__(
         self, 
@@ -42,8 +41,7 @@ class EmoticDataset(Dataset):
         sample = self.data[index]
         name = sample.split('/')[-1]
         
-        img = Image.open(sample)
-        img = img.convert("RGB")
+        img = Image.open(sample).convert("RGB")
         img = self.transform(img)    
         
         # process label
@@ -66,7 +64,7 @@ class EmoticDataset(Dataset):
                     transforms.RandomHorizontalFlip(0.2),
                     transforms.RandomRotation(10),
                     transforms.ToTensor(),
-                    transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                     
                 ]
             )
@@ -75,7 +73,7 @@ class EmoticDataset(Dataset):
                 [
                     transforms.Resize(self.img_size),
                     transforms.ToTensor(),
-                    transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                 ]
             )
             

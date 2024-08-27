@@ -15,11 +15,6 @@ class EmoticONNX:
         self.load_model(model_path)
 
     def load_model(self, model_path: str) -> None:
-        """ Load model 
-
-        Args:
-            model_path (str): _description_
-        """
         self.model = ort.InferenceSession(
             model_path,
             sess_options=sess_options,
@@ -38,14 +33,14 @@ class EmoticONNX:
     
     def inference(self, img) -> dict:
         """ Predict function
-        Args:
-            img: An image source
-        Return:
-            Return a dictionary {
-                'age': <int> age estimation, 
-                'gender': <string> Male or Female classification, 
-                'emotion': <string> Emotion classification
-            }
+            Args:
+                - img: An image source
+            Return:
+                Return a dictionary {
+                    'age': <int> age estimation, 
+                    'gender': <string> Male or Female classification, 
+                    'emotion': <string> Emotion classification
+                }
         """
         assert isinstance(img, np.ndarray), f'Type input model is a list, len(image) = {len(img)}, '\
                                             'should be use .batch_inference(imgs)'
@@ -63,14 +58,6 @@ class EmoticONNX:
             return [self.postprocess(results)]
     
     def batch_inference(self, imgs: list[np.array]) -> list[dict]:
-        """ Process image by batch
-
-        Args:
-            imgs (list[np.array]): list of image
-
-        Returns:
-            list[dict]: 
-        """
         tensor_imgs = []
         for x in imgs:
             tensor_imgs.append(self.preprocess(x))
@@ -81,14 +68,6 @@ class EmoticONNX:
         
     
     def preprocess(self, image:np.array, img_size=(224, 224), mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]) -> np.array:
-        """Normalize an image input
-
-        Args:
-            image (np.array): an image is a numpy array
-            img_size (tuple, optional): input size of model. Defaults to (224, 224).
-            mean (list, optional). Defaults to [0.5, 0.5, 0.5].
-            std (list, optional). Defaults to [0.5, 0.5, 0.5].
-        """
         # Resize image
         image = cv2.resize(image, img_size)
         image = image.transpose((2, 0, 1)) / 255.0  # Convert to channels first and normalize
@@ -98,14 +77,7 @@ class EmoticONNX:
         
         return image
     
-    def postprocess(self, result:list) -> dict:
-        """ Format predict model into dictionary
-        Args:
-            result (list): list of value predict by model [age, gender, emotion]
-
-        Returns:
-            dict: a dictionary age, gender and emotion 
-        """
+    def postprocess(self, result: np.array) -> dict:
         age = round(result[0].item())
         gender = 'Female' if result[1].item() > 0.5 else 'Male'
         index_emotion = self.softmax(result[2])
@@ -113,14 +85,6 @@ class EmoticONNX:
         return {'age': age, 'gender': gender, 'emotion' : EMOTIONS[index_emotion]}
                
     def softmax(self, x:np.array) -> int:
-        """ Softmax function
-
-        Args:
-            x (np.array): A np.array shape 2D
-
-        Returns:
-            int: index of max value in array
-        """
         return np.argmax(np.exp(x)/np.sum(np.exp(x)))
 
     
